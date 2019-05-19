@@ -33,16 +33,36 @@ async def setLights():
 
 #loop.create_task(setLights())
 
-p0 = machine.Pin(33, machine.Pin.OUT)
-p1 = machine.Pin(25, machine.Pin.OUT)
-p2 = machine.Pin(26, machine.Pin.OUT)
-p3 = machine.Pin(27, machine.Pin.OUT)
+
+from machine import ADC
+adc = ADC(machine.Pin(32))
+adc.atten(ADC.ATTN_11DB)
+#adc.width(ADC.WIDTH_9BIT)
+async def monitorPh():
+    while True:
+        samples=[]
+        for i in range(0,9):
+            samples.append(adc.read())
+            await asyncio.sleep(0.1)
+        sample=sum(samples)/10
+        value = (sample/4095)*100
+
+        print("ph =", value, "%")
+        await asyncio.sleep(5)
+        #await asyncio.sleep(60*15) #15 minutes
+
+loop.create_task(monitorPh())
+
+p0 = machine.Pin(25, machine.Pin.OUT)
+p1 = machine.Pin(26, machine.Pin.OUT)
+p2 = machine.Pin(27, machine.Pin.OUT)
+p3 = machine.Pin(14, machine.Pin.OUT)
 p0.off()
 p1.off()
 p2.off()
 p3.off()
 
-rpmTarget=60
+rpmTarget=0.2
 stepsPerRotation=4076*2 #An approximate value, double because of microstepping
 sleepTime=60/rpmTarget/stepsPerRotation
 
