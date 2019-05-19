@@ -1,37 +1,37 @@
+import machine, network
 import uasyncio as asyncio
-loop = asyncio.get_event_loop()
-
-import machine
-import network
+import utime as time
+from ntptime import settime
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect('FibreOp730', '24F2M3ATYNGY4M34')
+wlan.connect('FibreOP730', '24F2M3ATYNGY4M34')
 
-from ntptime import settime
+loop = asyncio.get_event_loop()
 
 async def setTime():
     while True:
+        print("time is unset")
         try:
             settime() #No timezones, we use UTC.
-        except ETIMEDOUT:
-            await asyncio.sleep(15) #Wait 15 seconds and try again
+        except IndexError:
+            await asyncio.sleep(5) #Wait 5 seconds and try again
         else:
+            print("time is", *time.localtime())
             break
 loop.create_task(setTime())
 
-import utime as time
 hourOffset=3
 
 async def setLights():
-    t = time.localtime(time.time())
-    if  20 > t.[3]+hourOffset > 8:
+    t = time.localtime(time.time())[3]+hourOffset
+    if 20 > t and t > 8:
         pass
     else:
         pass
     await asyncio.sleep(60*15) #15 minutes
 
-loop.create_task(runStepper())
+#loop.create_task(setLights())
 
 p0 = machine.Pin(33, machine.Pin.OUT)
 p1 = machine.Pin(25, machine.Pin.OUT)
@@ -66,13 +66,14 @@ async def runStepper():
             p2.value(state[2])
             p3.value(state[3])
 
+loop.create_task(runStepper())
+
 import gc
 gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 async def collectGarbage():
     gc.collect()
     await asyncio.sleep(60*5)
 
-loop.create_task(runStepper())
 loop.create_task(collectGarbage())
 
 loop.run_forever()

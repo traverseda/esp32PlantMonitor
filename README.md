@@ -7,3 +7,4 @@ esptool --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 esp
 ampy -p /dev/ttyUSB0  --baud 115200 put uasyncio/
 ampy -p /dev/ttyUSB0  --baud 115200 put main.py
 ```
+
