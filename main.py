@@ -9,14 +9,23 @@ wlan.active(True)
 wlan.connect('FibreOp730', '24F2M3ATYNGY4M34')
 
 from ntptime import settime
-settime() #No timezones, we use UTC.
+
+async def setTime():
+    while True:
+        try:
+            settime() #No timezones, we use UTC.
+        except ETIMEDOUT:
+            await asyncio.sleep(15) #Wait 15 seconds and try again
+        else:
+            break
+loop.create_task(setTime())
 
 import utime as time
 hourOffset=3
 
 async def setLights():
     t = time.localtime(time.time())
-    if  20 < t.[3]+hourOffset > 8:
+    if  20 > t.[3]+hourOffset > 8:
         pass
     else:
         pass
@@ -61,7 +70,7 @@ import gc
 gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 async def collectGarbage():
     gc.collect()
-    await asyncio.sleep(60*15)
+    await asyncio.sleep(60*5)
 
 loop.create_task(runStepper())
 loop.create_task(collectGarbage())
