@@ -1,6 +1,7 @@
 import machine, network
 import uasyncio as asyncio
 import utime as time
+from uasyncio.synchro import Lock
 from ntptime import settime
 
 wlan = network.WLAN(network.STA_IF)
@@ -31,15 +32,18 @@ async def setLights():
         pass
     await asyncio.sleep(60*15) #15 minutes
 
-#loop.create_task(setLights())
+loop.create_task(setLights())
 
 
 from machine import ADC
 adc = ADC(machine.Pin(32))
-adc.atten(ADC.ATTN_11DB)
-#adc.width(ADC.WIDTH_9BIT)
+adc.atten(ADC.ATTN_6DB)
+
+adcLock = Lock()
+
 async def monitorPh():
     while True:
+        await adcLock.acquire()
         samples=[]
         for i in range(0,9):
             samples.append(adc.read())
@@ -48,10 +52,17 @@ async def monitorPh():
         value = (sample/4095)*100
 
         print("ph =", value, "%")
+        adcLock.release()
         await asyncio.sleep(5)
-        #await asyncio.sleep(60*15) #15 minutes
 
 loop.create_task(monitorPh())
+
+async def monitorEc():
+    while True:
+        await adcLock.acquire()
+        adcLock.release()
+        await asyncio.sleep(20*60)
+loop.create_task(monitorEc())
 
 p0 = machine.Pin(25, machine.Pin.OUT)
 p1 = machine.Pin(26, machine.Pin.OUT)
